@@ -30,15 +30,17 @@ project "ImGui"
 		systemversion "latest"
 		cppdialect "C++20"
 
-	filter "configurations:Debug"
-		runtime "Debug"
-		symbols "on"
+filter "configurations:Debug"
+defines { "AE_DEBUG" }
+buildoptions "/MDd"
+symbols "On"
 
-	filter "configurations:Release"
-		runtime "Release"
-		optimize "on"
+filter "configurations:Release"
+defines { "AE_RELEASE" }
+buildoptions "/MD"
+optimize "On"
 
-    filter "configurations:Dist"
-		runtime "Release"
-		optimize "on"
-        symbols "off"
+filter "configurations:Dist"
+defines { "AE_DIST" }
+buildoptions "/MD"
+optimize "On"
