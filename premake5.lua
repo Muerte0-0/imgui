@@ -1,7 +1,7 @@
 project "ImGui"
 	kind "StaticLib"
 	language "C++"
-    staticruntime "off"
+        staticruntime "off"
 
 	targetdir ("../../../Binaries/" .. OutputDir .. "/%{prj.name}")
 	objdir ("../../../Intermediate/" .. OutputDir .. "/%{prj.name}")
@@ -32,15 +32,17 @@ project "ImGui"
 
 filter "configurations:Debug"
 defines { "AE_DEBUG" }
-buildoptions "/MDd"
+runtime "Debug"
 symbols "On"
 
 filter "configurations:Release"
 defines { "AE_RELEASE" }
-buildoptions "/MD"
+runtime "Release"
 optimize "On"
+symbols "On"
 
 filter "configurations:Dist"
 defines { "AE_DIST" }
-buildoptions "/MD"
+runtime "Release"
 optimize "On"
+symbols "Off"
