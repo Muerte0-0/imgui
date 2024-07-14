@@ -1,7 +1,8 @@
 project "ImGui"
 	kind "StaticLib"
 	language "C++"
-        staticruntime "off"
+    cppdialect "C++20"
+    staticruntime "on"
 
 	targetdir ("../../../Binaries/" .. OutputDir .. "/%{prj.name}")
 	objdir ("../../../Intermediate/" .. OutputDir .. "/%{prj.name}")
@@ -21,28 +22,13 @@ project "ImGui"
 		"imgui_demo.cpp"
 	}
 
-	filter "system:windows"
-		systemversion "latest"
-		cppdialect "C++20"
-
-	filter "system:linux"
-		pic "On"
-		systemversion "latest"
-		cppdialect "C++20"
+filter "system:windows"
+systemversion "latest"
 
 filter "configurations:Debug"
-defines { "AE_DEBUG" }
 runtime "Debug"
-symbols "On"
+symbols "on"
 
 filter "configurations:Release"
-defines { "AE_RELEASE" }
 runtime "Release"
-optimize "On"
-symbols "On"
-
-filter "configurations:Dist"
-defines { "AE_DIST" }
-runtime "Release"
-optimize "On"
-symbols "Off"
+optimize "on"
