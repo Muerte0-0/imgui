@@ -3,24 +3,33 @@ project "ImGui"
 	language "C++"
     cppdialect "C++20"
     staticruntime "on"
-
 	targetdir ("../../../Binaries/" .. OutputDir .. "/%{prj.name}")
 	objdir ("../../../Intermediate/" .. OutputDir .. "/%{prj.name}")
 
-	files
-	{
-		"imconfig.h",
-		"imgui.h",
-		"imgui.cpp",
-		"imgui_draw.cpp",
-		"imgui_internal.h",
-		"imgui_tables.cpp",
-		"imgui_widgets.cpp",
-		"imstb_rectpack.h",
-		"imstb_textedit.h",
-		"imstb_truetype.h",
-		"imgui_demo.cpp"
-	}
+files
+{
+    "imconfig.h",
+    "imgui.h",
+    "imgui.cpp",
+    "imgui_draw.cpp",
+    "imgui_internal.h",
+    "imgui_tables.cpp",
+    "imgui_widgets.cpp",
+    "imstb_rectpack.h",
+    "imstb_textedit.h",
+    "imstb_truetype.h",
+    "imgui_demo.cpp",
+    "backends/imgui_impl_glfw.h",
+    "backends/imgui_impl_glfw.cpp",
+    "backends/imgui_impl_opengl3.h",
+    "backends/imgui_impl_opengl3.cpp"
+}
+
+includedirs
+{
+    "../imgui",
+    "../glfw/include"
+}
 
 filter "system:windows"
 systemversion "latest"
