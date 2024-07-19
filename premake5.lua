@@ -22,13 +22,17 @@ files
     "backends/imgui_impl_glfw.h",
     "backends/imgui_impl_glfw.cpp",
     "backends/imgui_impl_opengl3.h",
-    "backends/imgui_impl_opengl3.cpp"
+    "backends/imgui_impl_opengl3.cpp",
+    "backends/imgui_impl_vulkan.h",
+    "backends/imgui_impl_vulkan.cpp",
 }
 
 includedirs
 {
     "../imgui",
-    "../glfw/include"
+    "../glfw/include",
+
+    "%{IncludeDir.VulkanSDK}"
 }
 
 filter "system:windows"
