@@ -26,6 +26,9 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2024-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2024-07-22: Update for SDL3 api changes: SDL_GetGamepads() memory ownership change. (#7807)
+//  2024-07-18: Update for SDL3 api changes: SDL_GetClipboardText() memory ownership change. (#7801)
+//  2024-07-15: Update for SDL3 api changes: SDL_GetProperty() change to SDL_GetPointerProperty(). (#7794)
 //  2024-07-02: Update for SDL3 api changes: SDLK_x renames and SDLK_KP_x removals (#7761, #7762).
 //  2024-07-01: Update for SDL3 api changes: SDL_SetTextInputRect() changed to SDL_SetTextInputArea().
 //  2024-06-26: Update for SDL3 api changes: SDL_StartTextInput()/SDL_StopTextInput()/SDL_SetTextInputRect() functions signatures.
@@ -128,7 +131,8 @@ static const char* ImGui_ImplSDL3_GetClipboardText(void*)
     ImGui_ImplSDL3_Data* bd = ImGui_ImplSDL3_GetBackendData();
     if (bd->ClipboardTextData)
         SDL_free(bd->ClipboardTextData);
-    bd->ClipboardTextData = SDL_GetClipboardText();
+    const char* sdl_clipboard_text = SDL_GetClipboardText();
+    bd->ClipboardTextData = sdl_clipboard_text ? SDL_strdup(sdl_clipboard_text) : NULL;
     return bd->ClipboardTextData;
 }
 
@@ -429,10 +433,10 @@ static void ImGui_ImplSDL3_SetupPlatformHandles(ImGuiViewport* viewport, SDL_Win
 {
     viewport->PlatformHandle = window;
     viewport->PlatformHandleRaw = nullptr;
-#if defined(__WIN32__) && !defined(__WINRT__)
-    viewport->PlatformHandleRaw = (HWND)SDL_GetProperty(SDL_GetWindowProperties(window), "SDL.window.win32.hwnd", nullptr);
+#if defined(_WIN32) && !defined(__WINRT__)
+    viewport->PlatformHandleRaw = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 #elif defined(__APPLE__) && defined(SDL_VIDEO_DRIVER_COCOA)
-    viewport->PlatformHandleRaw = (void*)SDL_GetProperty(SDL_GetWindowProperties(window), "SDL.window.cocoa.window", nullptr);
+    viewport->PlatformHandleRaw = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
 #endif
 }
 
@@ -730,7 +734,7 @@ static void ImGui_ImplSDL3_UpdateGamepads()
     {
         ImGui_ImplSDL3_CloseGamepads();
         int sdl_gamepads_count = 0;
-        SDL_JoystickID* sdl_gamepads = SDL_GetGamepads(&sdl_gamepads_count);
+        const SDL_JoystickID* sdl_gamepads = SDL_GetGamepads(&sdl_gamepads_count);
         for (int n = 0; n < sdl_gamepads_count; n++)
             if (SDL_Gamepad* gamepad = SDL_OpenGamepad(sdl_gamepads[n]))
             {
@@ -738,7 +742,6 @@ static void ImGui_ImplSDL3_UpdateGamepads()
                 if (bd->GamepadMode == ImGui_ImplSDL3_GamepadMode_AutoFirst)
                     break;
             }
-        SDL_free(sdl_gamepads);
         bd->WantUpdateGamepadsList = false;
     }
 
@@ -786,7 +789,7 @@ static void ImGui_ImplSDL3_UpdateMonitors()
     bd->WantUpdateMonitors = false;
 
     int display_count;
-    SDL_DisplayID* displays = SDL_GetDisplays(&display_count);
+    const SDL_DisplayID* displays = SDL_GetDisplays(&display_count);
     for (int n = 0; n < display_count; n++)
     {
         // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
@@ -924,7 +927,7 @@ static void ImGui_ImplSDL3_DestroyWindow(ImGuiViewport* viewport)
     if (ImGui_ImplSDL3_ViewportData* vd = (ImGui_ImplSDL3_ViewportData*)viewport->PlatformUserData)
     {
         if (vd->GLContext && vd->WindowOwned)
-            SDL_GL_DeleteContext(vd->GLContext);
+            SDL_GL_DestroyContext(vd->GLContext);
         if (vd->Window && vd->WindowOwned)
             SDL_DestroyWindow(vd->Window);
         vd->GLContext = nullptr;
