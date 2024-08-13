@@ -54,20 +54,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\..\..\..\Binaries\Debug-windows-x86_64\ImGui\</OutDir>
-    <IntDir>..\..\..\..\Intermediate\Debug-windows-x86_64\ImGui\</IntDir>
+    <OutDir>..\..\..\..\Binaries\Debug-windows-x86_64\Engine\ImGui\</OutDir>
+    <IntDir>..\..\..\..\Intermediate\Debug-windows-x86_64\Engine\ImGui\</IntDir>
     <TargetName>ImGui</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\..\..\..\Binaries\Release-windows-x86_64\ImGui\</OutDir>
-    <IntDir>..\..\..\..\Intermediate\Release-windows-x86_64\ImGui\</IntDir>
+    <OutDir>..\..\..\..\Binaries\Release-windows-x86_64\Engine\ImGui\</OutDir>
+    <IntDir>..\..\..\..\Intermediate\Release-windows-x86_64\Engine\ImGui\</IntDir>
     <TargetName>ImGui</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <OutDir>..\..\..\..\Binaries\Dist-windows-x86_64\ImGui\</OutDir>
-    <IntDir>..\..\..\..\Intermediate\Dist-windows-x86_64\ImGui\</IntDir>
+    <OutDir>..\..\..\..\Binaries\Dist-windows-x86_64\Engine\ImGui\</OutDir>
+    <IntDir>..\..\..\..\Intermediate\Dist-windows-x86_64\Engine\ImGui\</IntDir>
     <TargetName>ImGui</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -75,7 +75,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>.;..\glfw\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\GLFW\include;..\Vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -93,7 +93,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>.;..\glfw\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\GLFW\include;..\Vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -114,7 +114,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>.;..\glfw\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\GLFW\include;..\Vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
