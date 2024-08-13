@@ -31,9 +31,8 @@ files
 includedirs
 {
     "../imgui",
-    "../glfw/include",
-
-    "%{IncludeDir.VulkanSDK}"
+    "%{IncludeDir.GLFW}",
+    "%{IncludeDir.Vulkan}"
 }
 
 filter "system:windows"
