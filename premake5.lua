@@ -4,8 +4,8 @@ project "ImGui"
     	cppdialect "C++20"
     	staticruntime "on"
 
-targetdir ("%{wks.location}/Binaries/" .. OutputDir .. "/Engine" "/%{prj.name}")
-objdir ("%{wks.location}/Intermediate/" .. OutputDir .. "/Engine" "/%{prj.name}")
+targetdir ("%{wks.location}/Binaries/" .. OutputDir .. "/Engine/%{prj.name}")
+objdir ("%{wks.location}/Intermediate/" .. OutputDir .. "/Engine/%{prj.name}")
 
 files
 {
