@@ -24,6 +24,10 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2024-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2024-08-22: moved some OS/backend related function pointers from ImGuiIO to ImGuiPlatformIO:
+//               - io.GetClipboardTextFn    -> platform_io.Platform_GetClipboardTextFn
+//               - io.SetClipboardTextFn    -> platform_io.Platform_SetClipboardTextFn
+//               - io.PlatformOpenInShellFn -> platform_io.Platform_OpenInShellFn
 //  2024-07-31: Added ImGui_ImplGlfw_Sleep() helper function for usage by our examples app, since GLFW doesn't provide one.
 //  2024-07-08: *BREAKING* Renamed ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback to ImGui_ImplGlfw_InstallEmscriptenCallbacks(), added GLFWWindow* parameter.
 //  2024-07-08: Emscripten: Added support for GLFW3 contrib port (GLFW 3.4.0 features + bug fixes): to enable, replace -sUSE_GLFW=3 with --use-port=contrib.glfw3 (requires emscripten 3.1.59+) (https://github.com/pongasoft/emscripten-glfw)
@@ -206,16 +210,6 @@ static void ImGui_ImplGlfw_InitPlatformInterface();
 static void ImGui_ImplGlfw_ShutdownPlatformInterface();
 
 // Functions
-static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
-{
-    return glfwGetClipboardString((GLFWwindow*)user_data);
-}
-
-static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
-{
-    glfwSetClipboardString((GLFWwindow*)user_data, text);
-}
-
 static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key)
 {
     switch (key)
@@ -609,11 +603,11 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Time = 0.0;
     bd->WantUpdateMonitors = true;
 
-    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
-    io.ClipboardUserData = bd->Window;
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_SetClipboardTextFn = [](ImGuiContext*, const char* text) { glfwSetClipboardString(NULL, text); };
+    platform_io.Platform_GetClipboardTextFn = [](ImGuiContext*) { return glfwGetClipboardString(NULL); };
 #ifdef __EMSCRIPTEN__
-    io.PlatformOpenInShellFn = [](ImGuiContext*, const char* url) { ImGui_ImplGlfw_EmscriptenOpenURL(url); return true; };
+    platform_io.Platform_OpenInShellFn = [](ImGuiContext*, const char* url) { ImGui_ImplGlfw_EmscriptenOpenURL(url); return true; };
 #endif
 
     // Create mouse cursors
@@ -906,6 +900,8 @@ static void ImGui_ImplGlfw_UpdateMonitors()
         // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
         float x_scale, y_scale;
         glfwGetMonitorContentScale(glfw_monitors[n], &x_scale, &y_scale);
+        if (x_scale == 0.0f)
+            continue; // Some accessibility applications are declaring virtual monitors with a DPI of 0, see #7902.
         monitor.DpiScale = x_scale;
 #endif
         monitor.PlatformHandle = (void*)glfw_monitors[n]; // [...] GLFW doc states: "guaranteed to be valid only until the monitor configuration changes"

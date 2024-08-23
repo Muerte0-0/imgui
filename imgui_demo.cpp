@@ -322,23 +322,24 @@ static ExampleTreeNode* ExampleTree_CreateNode(const char* name, int uid, Exampl
 static ExampleTreeNode* ExampleTree_CreateDemoTree()
 {
     static const char* root_names[] = { "Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pear", "Pineapple", "Strawberry", "Watermelon" };
-    char name_buf[32];
+    const size_t NAME_MAX_LEN = sizeof(ExampleTreeNode::Name);
+    char name_buf[NAME_MAX_LEN];
     int uid = 0;
     ExampleTreeNode* node_L0 = ExampleTree_CreateNode("<ROOT>", ++uid, NULL);
     const int root_items_multiplier = 2;
     for (int idx_L0 = 0; idx_L0 < IM_ARRAYSIZE(root_names) * root_items_multiplier; idx_L0++)
     {
-        snprintf(name_buf, 32, "%s %d", root_names[idx_L0 / root_items_multiplier], idx_L0 % root_items_multiplier);
+        snprintf(name_buf, IM_ARRAYSIZE(name_buf), "%s %d", root_names[idx_L0 / root_items_multiplier], idx_L0 % root_items_multiplier);
         ExampleTreeNode* node_L1 = ExampleTree_CreateNode(name_buf, ++uid, node_L0);
         const int number_of_childs = (int)strlen(node_L1->Name);
         for (int idx_L1 = 0; idx_L1 < number_of_childs; idx_L1++)
         {
-            snprintf(name_buf, 32, "Child %d", idx_L1);
+            snprintf(name_buf, IM_ARRAYSIZE(name_buf), "Child %d", idx_L1);
             ExampleTreeNode* node_L2 = ExampleTree_CreateNode(name_buf, ++uid, node_L1);
             node_L2->HasData = true;
             if (idx_L1 == 0)
             {
-                snprintf(name_buf, 32, "Sub-child %d", 0);
+                snprintf(name_buf, IM_ARRAYSIZE(name_buf), "Sub-child %d", 0);
                 ExampleTreeNode* node_L3 = ExampleTree_CreateNode(name_buf, ++uid, node_L2);
                 node_L3->HasData = true;
             }
@@ -3751,7 +3752,7 @@ static void ShowDemoWindowMultiSelect(ImGuiDemoWindowData* demo_data)
             {
                 ImVec2 color_button_sz(ImGui::GetFontSize(), ImGui::GetFontSize());
                 if (widget_type == WidgetType_TreeNode)
-                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.0f));
+                    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 0.0f);
 
                 ImGuiMultiSelectIO* ms_io = ImGui::BeginMultiSelect(flags, selection.Size, items.Size);
                 selection.ApplyRequests(ms_io);
@@ -3767,7 +3768,7 @@ static void ShowDemoWindowMultiSelect(ImGuiDemoWindowData* demo_data)
                     ImGui::BeginTable("##Split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_NoPadOuterX);
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.70f);
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.30f);
-                    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.0f));
+                    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacingY, 0.0f);
                 }
 
                 ImGuiListClipper clipper;
@@ -5156,8 +5157,8 @@ const ImGuiTableSortSpecs* MyItem::s_current_sort_specs = NULL;
 static void PushStyleCompact()
 {
     ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, (float)(int)(style.FramePadding.y * 0.60f));
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, (float)(int)(style.ItemSpacing.y * 0.60f));
 }
 
 static void PopStyleCompact()
@@ -6191,7 +6192,7 @@ static void ShowDemoWindowTables()
             for (int row = 0; row < 8; row++)
             {
                 if ((row % 3) == 2)
-                    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(style.CellPadding.x, 20.0f));
+                    ImGui::PushStyleVarY(ImGuiStyleVar_CellPadding, 20.0f);
                 ImGui::TableNextRow(ImGuiTableRowFlags_None);
                 ImGui::TableNextColumn();
                 ImGui::Text("CellPadding.y = %.2f", style.CellPadding.y);
