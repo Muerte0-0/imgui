@@ -4,8 +4,8 @@ project "ImGui"
     	cppdialect "C++20"
     	staticruntime "on"
 
-targetdir ("%{wks.location}/Binaries/" .. OutputDir .. "/Engine/%{prj.name}")
-objdir ("%{wks.location}/Intermediate/" .. OutputDir .. "/Engine/%{prj.name}")
+targetdir ("%{wks.location}/Binaries/ThirdParty/" .. OutputDir .. "/Engine/%{prj.name}")
+objdir ("%{wks.location}/Intermediate/ThirdParty/" .. OutputDir .. "/Engine/%{prj.name}")
 
 files
 {
@@ -20,19 +20,11 @@ files
     "imstb_textedit.h",
     "imstb_truetype.h",
     "imgui_demo.cpp",
-    "backends/imgui_impl_glfw.h",
-    "backends/imgui_impl_glfw.cpp",
-    "backends/imgui_impl_opengl3.h",
-    "backends/imgui_impl_opengl3.cpp",
-    "backends/imgui_impl_vulkan.h",
-    "backends/imgui_impl_vulkan.cpp",
 }
 
 includedirs
 {
-    "../imgui",
-    "%{IncludeDir.GLFW}",
-    "%{IncludeDir.Vulkan}"
+    "../imgui"
 }
 
 filter "system:windows"
