@@ -1,4 +1,4 @@
-// dear imgui, v1.91.5
+// dear imgui, v1.91.6 WIP
 // (main code and documentation)
 
 // Help:
@@ -4091,7 +4091,7 @@ ImGuiContext::ImGuiContext(ImFontAtlas* shared_font_atlas)
     StackSizesInBeginForCurrentWindow = NULL;
 
     DebugDrawIdConflictsCount = 0;
-    DebugLogFlags = ImGuiDebugLogFlags_EventError | ImGuiDebugLogFlags_OutputToTTY;
+    DebugLogFlags = ImGuiDebugLogFlags_EventError | ImGuiDebugLogFlags_OutputToTTY | ImGuiDebugLogFlags_EventFont;
     DebugLocateId = 0;
     DebugLogSkippedErrors = 0;
     DebugLogAutoDisableFlags = ImGuiDebugLogFlags_None;
@@ -4327,8 +4327,8 @@ ImGuiWindow::ImGuiWindow(ImGuiContext* ctx, const char* name) : DrawListInst(NUL
     SettingsOffset = -1;
     DockOrder = -1;
     DrawList = &DrawListInst;
-    DrawList->_Data = &Ctx->DrawListSharedData;
     DrawList->_OwnerName = Name;
+    DrawList->_Data = &Ctx->DrawListSharedData;
     NavPreferredScoringPosRel[0] = NavPreferredScoringPosRel[1] = ImVec2(FLT_MAX, FLT_MAX);
     IM_PLACEMENT_NEW(&WindowClass) ImGuiWindowClass();
 }
@@ -4856,6 +4856,13 @@ ImGuiPlatformIO& ImGui::GetPlatformIO()
     return GImGui->PlatformIO;
 }
 
+// This variant exists to facilitate backends experimenting with multi-threaded parallel context. (#8069, #6293, #5856)
+ImGuiPlatformIO& ImGui::GetPlatformIOEx(ImGuiContext* ctx)
+{
+    IM_ASSERT(ctx != NULL);
+    return ctx->PlatformIO;
+}
+
 // Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
 ImDrawData* ImGui::GetDrawData()
 {
@@ -5201,7 +5208,7 @@ void ImGui::UpdateHoveredWindowAndCaptureFlags()
     io.WantTextInput = (g.WantTextInputNextFrame != -1) ? (g.WantTextInputNextFrame != 0) : false;
 }
 
-// Calling SetupDrawListSharedData() is followed by SetCurrentFont() which sets up the remaining data.
+// Called once a frame. Followed by SetCurrentFont() which sets up the remaining data.
 static void SetupDrawListSharedData()
 {
     ImGuiContext& g = *GImGui;
@@ -6049,7 +6056,7 @@ bool ImGui::IsItemDeactivatedAfterEdit()
     return IsItemDeactivated() && (g.ActiveIdPreviousFrameHasBeenEditedBefore || (g.ActiveId == 0 && g.ActiveIdHasBeenEditedBefore));
 }
 
-// == GetItemID() == GetFocusID()
+// == (GetItemID() == GetFocusID() && GetFocusID() != 0)
 bool ImGui::IsItemFocused()
 {
     ImGuiContext& g = *GImGui;
@@ -11050,7 +11057,7 @@ static void ImGui::ErrorCheckNewFrameSanityChecks()
             IM_UNUSED(mon);
             IM_ASSERT(mon.MainSize.x > 0.0f && mon.MainSize.y > 0.0f && "Monitor main bounds not setup properly.");
             IM_ASSERT(ImRect(mon.MainPos, mon.MainPos + mon.MainSize).Contains(ImRect(mon.WorkPos, mon.WorkPos + mon.WorkSize)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
-            IM_ASSERT(mon.DpiScale != 0.0f);
+            IM_ASSERT(mon.DpiScale > 0.0f && mon.DpiScale < 99.0f && "Monitor DpiScale is invalid."); // Typical correct values would be between 1.0f and 4.0f
         }
     }
 }
@@ -11223,7 +11230,7 @@ bool    ImGui::ErrorLog(const char* msg)
     // Output to tooltip
     if (g.IO.ConfigErrorRecoveryEnableTooltip)
     {
-        if (BeginErrorTooltip())
+        if (g.WithinFrameScope && BeginErrorTooltip())
         {
             if (g.ErrorCountCurrentFrame < 20)
             {
@@ -11260,7 +11267,7 @@ void ImGui::ErrorCheckEndFrameFinalizeErrorTooltip()
         BulletText("Code should use PushID()/PopID() in loops, or append \"##xx\" to same-label identifiers!");
         BulletText("Empty label e.g. Button(\"\") == same ID as parent widget/node. Use Button(\"##xx\") instead!");
         //BulletText("Code intending to use duplicate ID may use e.g. PushItemFlag(ImGuiItemFlags_AllowDuplicateId, true); ... PopItemFlag()"); // Not making this too visible for fear of it being abused.
-        BulletText("Set io.ConfigDebugDetectIdConflicts=false to disable this warning in non-programmers builds.");
+        BulletText("Set io.ConfigDebugHighlightIdConflicts=false to disable this warning in non-programmers builds.");
         Separator();
         Text("(Hold CTRL to: use");
         SameLine();
@@ -15515,6 +15522,7 @@ void ImGui::SetCurrentViewport(ImGuiWindow* current_window, ImGuiViewportP* view
         return;
     g.CurrentDpiScale = viewport ? viewport->DpiScale : 1.0f;
     g.CurrentViewport = viewport;
+    IM_ASSERT(g.CurrentDpiScale > 0.0f && g.CurrentDpiScale < 99.0f); // Typical correct values would be between 1.0f and 4.0f
     //IMGUI_DEBUG_LOG_VIEWPORT("[viewport] SetCurrentViewport changed '%s' 0x%08X\n", current_window ? current_window->Name : NULL, viewport ? viewport->ID : 0);
 
     // Notify platform layer of viewport changes
@@ -15793,6 +15801,7 @@ static void ImGui::UpdateViewportsNewFrame()
             new_dpi_scale = g.PlatformIO.Monitors[viewport->PlatformMonitor].DpiScale;
         else
             new_dpi_scale = (viewport->DpiScale != 0.0f) ? viewport->DpiScale : 1.0f;
+        IM_ASSERT(new_dpi_scale > 0.0f && new_dpi_scale < 99.0f); // Typical correct values would be between 1.0f and 4.0f
         if (viewport->DpiScale != 0.0f && new_dpi_scale != viewport->DpiScale)
         {
             float scale_factor = new_dpi_scale / viewport->DpiScale;
@@ -20847,6 +20856,17 @@ void ImGui::UpdateDebugToolFlashStyleColor()
         DebugFlashStyleColorStop();
 }
 
+static const char* FormatTextureIDForDebugDisplay(char* buf, int buf_size, ImTextureID tex_id)
+{
+    union { void* ptr; int integer; } tex_id_opaque;
+    memcpy(&tex_id_opaque, &tex_id, ImMin(sizeof(void*), sizeof(tex_id)));
+    if (sizeof(tex_id) >= sizeof(void*))
+        ImFormatString(buf, buf_size, "0x%p", tex_id_opaque.ptr);
+    else
+        ImFormatString(buf, buf_size, "0x%04X", tex_id_opaque.integer);
+    return buf;
+}
+
 // Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
 static void MetricsHelpMarker(const char* desc)
 {
@@ -21715,16 +21735,6 @@ void ImGui::DebugNodeDockNode(ImGuiDockNode* node, const char* label)
     }
 }
 
-static void FormatTextureIDForDebugDisplay(char* buf, int buf_size, ImTextureID tex_id)
-{
-    union { void* ptr; int integer; } tex_id_opaque;
-    memcpy(&tex_id_opaque, &tex_id, ImMin(sizeof(void*), sizeof(tex_id)));
-    if (sizeof(tex_id) >= sizeof(void*))
-        ImFormatString(buf, buf_size, "0x%p", tex_id_opaque.ptr);
-    else
-        ImFormatString(buf, buf_size, "0x%04X", tex_id_opaque.integer);
-}
-
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be NULL here. Viewport is generally null of destroyed popups which previously owned a viewport.
 void ImGui::DebugNodeDrawList(ImGuiWindow* window, ImGuiViewportP* viewport, const ImDrawList* draw_list, const char* label)
@@ -22257,6 +22267,7 @@ void ImGui::ShowDebugLogWindow(bool* p_open)
     ShowDebugLogFlag("Docking", ImGuiDebugLogFlags_EventDocking);
     ShowDebugLogFlag("Focus", ImGuiDebugLogFlags_EventFocus);
     ShowDebugLogFlag("IO", ImGuiDebugLogFlags_EventIO);
+    //ShowDebugLogFlag("Font", ImGuiDebugLogFlags_EventFont);
     ShowDebugLogFlag("Nav", ImGuiDebugLogFlags_EventNav);
     ShowDebugLogFlag("Popup", ImGuiDebugLogFlags_EventPopup);
     ShowDebugLogFlag("Selection", ImGuiDebugLogFlags_EventSelection);
