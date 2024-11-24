@@ -4,8 +4,8 @@ project "ImGui"
     	cppdialect "C++20"
     	staticruntime "on"
 
-targetdir (ThirdPartyTargetDir)
-objdir (ThirdPartyObjDir)
+targetdir (ThirdPartyBinDir)
+objdir (ThirdPartyIntDir)
 
 files
 {
